@@ -21,23 +21,40 @@ has extras_file => (
 has _route_map => (
   is   => 'ro',
   isa  => 'HashRef',
-  lazy => 1,
   init_arg => undef,
-  builder  => '_build_routes',
+  default  => sub {  {}  },
   traits   => [ 'Hash' ],
   handles  => {
-    routes      => 'values',
-    route_named => 'get',
+    routes   => 'values',
+    route_at => 'get',
+    _add_route => 'set',
   },
 );
 
-# should be doing per-route validation:
-#   do not allow :name to occur multiple times for one name
-#   do not allow * to occur other than as the very last part
+sub add_route {
+  my ($self, $route) = @_;
+
+  confess "invalid route" unless $route->isa('Router::Dumb::Route');
+
+  my $npath = $route->normalized_path;
+  if (my $existing = $self->route_at( $npath )) {
+    confess sprintf(
+      "route conflict: %s would conflict with %s",
+      $route->path,
+      $existing->path,
+    );
+  }
+
+  $self->_add_route($npath, $route);
+}
+
+sub BUILD {
+  my ($self) = @_;
+  $self->_build_routes;
+}
 
 sub _build_routes {
   my ($self) = @_;
-  my %map;
 
   my $root = $self->root_dir;
   my @files = `find $root -type f`;
@@ -58,7 +75,7 @@ sub _build_routes {
       target => $file,
     });
 
-    $map{ $route->path } = $route;
+    $self->add_route($route);
   }
 
   if ($self->has_extras_file) {
@@ -76,11 +93,9 @@ sub _build_routes {
         target => $file,
       });
 
-      $map{ $route->path } = $route;
+      $self->add_route($route);
     }
   }
-
-  return \%map;
 }
 
 sub route {
@@ -99,7 +114,7 @@ sub route {
 
   confess "path didn't start with /" unless $str =~ s{^/}{};
 
-  if (my $route = $self->route_named($str)) {
+  if (my $route = $self->route_at($str)) {
     # should always match! -- rjbs, 2011-07-13
     confess "empty route didn't match empty path"
       unless my $matches = $route->matches($str);
@@ -117,7 +132,9 @@ sub route {
   } $self->routes;
 
   for my $candidate (
-    sort { $b->part_count <=> $a->part_count } @candidates
+    sort { $b->part_count <=> $a->part_count
+        || $a->is_slurpy  <=> $b->is_slurpy
+    } @candidates
   ) {
     next unless my $matches = $candidate->matches($str);
     return {

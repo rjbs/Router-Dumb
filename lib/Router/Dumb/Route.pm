@@ -27,6 +27,15 @@ sub path {
   return $path // '';
 }
 
+sub normalized_path {
+  my ($self) = @_;
+
+  return '' unless my @parts = $self->parts;
+
+  my $i = 1;
+  return join q{/}, map { /^:/ ? (':' . $i++) : $_ } @parts;
+}
+
 has is_slurpy => (
   is   => 'ro',
   isa  => 'Bool',
