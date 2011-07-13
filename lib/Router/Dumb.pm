@@ -55,12 +55,9 @@ sub route {
   if (my $route = $self->route_at($str)) {
     # should always match! -- rjbs, 2011-07-13
     confess "empty route didn't match empty path"
-      unless my $matches = $route->matches($str);
+      unless my $match = $route->check($str);
 
-    return {
-      target  => $route->target,
-      matches => $matches,
-    }
+    return $match;
   }
 
   my @parts = split m{/}, $str;
@@ -74,11 +71,8 @@ sub route {
         || $a->is_slurpy  <=> $b->is_slurpy
     } @candidates
   ) {
-    next unless my $matches = $candidate->matches($str);
-    return {
-      target  => $candidate->target,
-      matches => $matches,
-    };
+    next unless my $match = $candidate->check($str);
+    return $match;
   }
 
   return;

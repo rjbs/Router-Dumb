@@ -2,6 +2,8 @@ use 5.14.0;
 package Router::Dumb::Route;
 use Moose;
 
+use Router::Dumb::Match;
+
 use namespace::autoclean;
 
 has target => (
@@ -83,10 +85,20 @@ sub BUILD {
   }
 }
 
-sub matches {
+sub _match {
+  my ($self, $matches) = @_;
+  $matches //= {};
+
+  return Router::Dumb::Match->new({
+    route   => $self,
+    matches => $matches,
+  });
+}
+
+sub check {
   my ($self, $str) = @_;
 
-  return {} if $str eq join(q{/}, $self->parts);
+  return $self->_match if $str eq join(q{/}, $self->parts);
 
   my %matches;
 
@@ -97,13 +109,13 @@ sub matches {
     my $my_part = $my_parts[ $i ];
 
     if ($my_part ne '*' and $my_part !~ /^:/) {
-      next TRY unless $my_part eq $in_parts[$i];
+      return unless $my_part eq $in_parts[$i];
       next PART;
     }
 
     if ($my_parts[$i] eq '*') {
       $matches{REST} = join q{/}, @in_parts[ $i .. $#in_parts ];
-      return \%matches;
+      return $self->_match(\%matches);
     }
 
     confess 'unreachable condition' unless $my_parts[$i] =~ /^:(.+)/;
@@ -111,12 +123,12 @@ sub matches {
     my $name  = $1;
     my $value = $in_parts[ $i ];
     if (my $constraint = $self->constraint_for($name)) {
-      next TRY unless $constraint->check($constraint);
+      return unless $constraint->check($value);
     }
     $matches{ $name } = $value;
   }
 
-  return \%matches;
+  return $self->_match(\%matches);
 }
 
 1;
