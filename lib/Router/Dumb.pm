@@ -45,10 +45,7 @@ sub route {
   $str =~ s|^(?:\./)+||s unless $str eq "./";   # ./xx      -> xx
   $str =~ s|^/(?:\.\./)+|/|;                    # /../../xx -> xx
   $str =~ s|^/\.\.$|/|;                         # /..       -> /
-
-  # Actually, I'm okay with turning / into '' -- rjbs, 2011-07-13
-  # $str =~ s|/\z|| unless $str eq "/";           # xx/       -> xx
-  $str =~ s|/\z||;                              # xx/       -> xx
+  $str =~ s|/\z|| unless $str eq "/";           # xx/       -> xx
 
   confess "path didn't start with /" unless $str =~ s{^/}{};
 
