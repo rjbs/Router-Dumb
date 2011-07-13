@@ -3,6 +3,7 @@ package Router::Dumb::Dumber;
 use Moose;
 extends 'Router::Dumb';
 
+use File::Find::Rule;
 use Router::Dumb::Route;
 
 use Moose::Util::TypeConstraints qw(find_type_constraint);
@@ -36,8 +37,7 @@ sub _build_routes {
   my ($self) = @_;
 
   my $dir = $self->simple_root;
-  my @files = `find $dir -type f`;
-  chomp @files;
+  my @files = File::Find::Rule->file->in($dir);
 
   for my $file (@files) {
     my $path = $file =~ s{/INDEX$}{/}gr;
