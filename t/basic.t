@@ -41,6 +41,8 @@ my @tests = (
     matches => _CH(num => 1234),
   },
 
+  '/citizen/xyzzy/dob' => undef,
+
   '/blog/1231/2;34/your-mom' => {
     target  => [ 'blog' ],
     matches => _CH(REST => '1231/2;34/your-mom'),

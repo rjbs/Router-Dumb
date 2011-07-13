@@ -5,6 +5,8 @@ extends 'Router::Dumb';
 
 use Router::Dumb::Route;
 
+use Moose::Util::TypeConstraints qw(find_type_constraint);
+
 use namespace::autoclean;
 
 has root_dir => (
@@ -52,21 +54,45 @@ sub _build_routes {
   }
 
   if ($self->has_extras_file) {
-    my $file = $self->extras_file;
-    my @lines = `cat $file`;
-    chomp @lines;
+    $self->_add_routes_from_file( $self->extras_file );
+  }
+}
 
-    for my $line (grep { /\S/ } @lines) {
+sub _add_routes_from_file {
+  my ($self, $file) = @_;
+
+  my @lines = `cat $file`;
+  chomp @lines;
+
+  # ignore comments, blanks
+  @lines = grep { /\S/ }
+           map  { s/#.*\z//r } @lines;
+
+  my $curr;
+
+  for my $i (0 .. $#lines) {
+    my $line = $lines[$i];
+
+    if ($line =~ /^\s/) {
+      confess "indented line found out of context of a route" unless $curr;
+      confess "couldn't understand line <$line>"
+        unless my ($name, $type) = $line =~ /\A\s+(\S+)\s+isa\s+(\S+)\s*\z/;
+
+      $curr->{constraints}->{$name} = find_type_constraint($type);
+    } else {
       my ($path, $target) = split /\s*=>\s*/, $line;
       s{^/}{} for $path, $target;
       my @parts = split m{/}, $path;
 
-      my $route = Router::Dumb::Route->new({
+      $curr = {
         parts  => \@parts,
         target => $target,
-      });
+      };
+    }
 
-      $self->add_route($route);
+    if ($curr and ($i == $#lines or $lines[ $i + 1 ] =~ /^\S/)) {
+      $self->add_route( Router::Dumb::Route->new($curr) );
+      undef $curr;
     }
   }
 }
