@@ -4,11 +4,17 @@ use Test::More;
 use Test::Deep qw(cmp_deeply listmethods);
 
 use Moose::Util::TypeConstraints qw(find_type_constraint);
+use Path::Class;
 use Router::Dumb::Dumber;
 
 my $r = Router::Dumb::Dumber->new({
-  root_dir    => 'templates/pages',
-  extras_file => 'eg/extras',
+  simple_root   => 'templates/pages',
+  simple_munger => sub {
+    my ($self, $filename) = @_;
+    dir('pages')->file( file($filename)->relative($self->simple_root) )
+                ->stringify;
+  },
+  extras_file   => 'eg/extras',
 });
 
 # Canonicalize hash.  This is stupid.  I need it because Test::Deep doesn't yet
@@ -29,10 +35,20 @@ $r->add_route(
 );
 
 my @tests = (
+  '/' => {
+    target  => [ 'pages/INDEX' ],
+    matches => _CH(),
+  },
+
+  '/images' => {
+    target  => [ 'pages/images/INDEX' ],
+    matches => _CH(),
+  },
+
   '/legal' => undef,
 
   '/legal/privacy' => {
-    target  => [ 'templates/pages/legal/privacy' ],
+    target  => [ 'pages/legal/privacy' ],
     matches => _CH(),
   },
 

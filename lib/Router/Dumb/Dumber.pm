@@ -9,10 +9,16 @@ use Moose::Util::TypeConstraints qw(find_type_constraint);
 
 use namespace::autoclean;
 
-has root_dir => (
+has simple_root => (
   is  => 'ro',
   isa => 'Str',
   required => 1,
+);
+
+has simple_munger => (
+  reader  => '_simple_munger',
+  isa     => 'CodeRef',
+  default => sub {  sub { $_[1] }  },
 );
 
 has extras_file => (
@@ -29,13 +35,13 @@ sub BUILD {
 sub _build_routes {
   my ($self) = @_;
 
-  my $root = $self->root_dir;
-  my @files = `find $root -type f`;
+  my $dir = $self->simple_root;
+  my @files = `find $dir -type f`;
   chomp @files;
 
   for my $file (@files) {
     my $path = $file =~ s{/INDEX$}{/}gr;
-    $path =~ s{$root}{};
+    $path =~ s{$dir}{};
     $path =~ s{^/}{};
 
     my @parts = split m{/}, $path;
@@ -47,7 +53,7 @@ sub _build_routes {
 
     my $route = Router::Dumb::Route->new({
       parts  => \@parts,
-      target => $file,
+      target => $self->_simple_munger->( $self, $file ),
     });
 
     $self->add_route($route);
