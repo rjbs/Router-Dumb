@@ -65,10 +65,12 @@ sub _build_routes {
     $path =~ s{$root}{};
     $path =~ s{^/}{};
 
-    confess "can't use colon in file names"    if $path =~ /:/;
-    confess "can't use asterisk in file names" if $path =~ /\*/;
-
     my @parts = split m{/}, $path;
+
+    confess "can't use placeholder-like name in route files"
+      if grep {; /^:/ } @parts;
+
+    confess "can't use asterisk in file names" if grep {; $_ eq '*' } @parts;
 
     my $route = Router::Dumb::Route->new({
       parts  => \@parts,
