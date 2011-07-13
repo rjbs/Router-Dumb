@@ -52,6 +52,16 @@ has has_params => (
   default  => sub { grep { /^:/ } $_[0]->parts },
 );
 
+has constraints => (
+  isa => 'HashRef',
+  default => sub {  {}  },
+  traits  => [ 'Hash' ],
+  handles => {
+    constraint_names => 'keys',
+    constraint_for   => 'get',
+  },
+);
+
 sub BUILD {
   my ($self) = @_;
 
@@ -62,6 +72,15 @@ sub BUILD {
   $seen{$_}++ for grep { $_ =~ /^:/ } $self->parts;
   my @repeated = grep { $seen{$_} > 1 } keys %seen;
   confess "some path match names were repeated: @repeated" if @repeated;
+
+  my @bad_constraints;
+  for my $key ($self->constraint_names) {
+    push @bad_constraints, $key unless $seen{ ":$key" };
+  }
+
+  if (@bad_constraints) {
+    confess "constraints were given for unknown names: @bad_constraints";
+  }
 }
 
 sub matches {
@@ -89,7 +108,12 @@ sub matches {
 
     confess 'unreachable condition' unless $my_parts[$i] =~ /^:(.+)/;
 
-    $matches{ $1 } = $in_parts[$i];
+    my $name  = $1;
+    my $value = $in_parts[ $i ];
+    if (my $constraint = $self->constraint_for($name)) {
+      next TRY unless $constraint->check($constraint);
+    }
+    $matches{ $name } = $value;
   }
 
   return \%matches;
