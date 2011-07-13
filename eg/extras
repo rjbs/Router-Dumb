@@ -1,0 +1,2 @@
+/citizen/:num/dob  =>  /citizen/dob
+/blog/*            =>  /blog
