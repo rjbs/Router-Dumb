@@ -51,7 +51,7 @@ has has_params => (
   isa  => 'Bool',
   lazy => 1,
   init_arg => undef,
-  default  => sub { grep { /^:/ } $_[0]->parts },
+  default  => sub { !! (grep { /^:/ } $_[0]->parts) },
 );
 
 has constraints => (
