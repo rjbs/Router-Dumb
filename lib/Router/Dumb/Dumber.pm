@@ -63,7 +63,7 @@ sub _build_routes {
 
       my $route = Router::Dumb::Route->new({
         parts  => \@parts,
-        target => $file,
+        target => $target,
       });
 
       $self->add_route($route);
