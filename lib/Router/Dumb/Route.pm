@@ -43,9 +43,17 @@ has has_params => (
   default  => sub { grep { /^:/ } $_[0]->parts },
 );
 
-# should be doing per-route validation:
-#   do not allow :name to occur multiple times for one name
-#   do not allow * to occur other than as the very last part
+sub BUILD {
+  my ($self) = @_;
+
+  confess "multiple asterisk parts in route"
+    if (grep { $_ eq '*' } $self->parts) > 1;
+
+  my %seen;
+  $seen{$_}++ for grep { $_ =~ /^:/ } $self->parts;
+  my @repeated = grep { $seen{$_} > 1 } keys %seen;
+  confess "some path match names were repeated: @repeated" if @repeated;
+}
 
 sub matches {
   my ($self, $str) = @_;
