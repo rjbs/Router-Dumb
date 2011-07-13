@@ -2,9 +2,9 @@ use strict;
 use warnings;
 use Test::More;
 
-use Router::Dumb;
+use Router::Dumb::Dumber;
 
-my $r = Router::Dumb->new({
+my $r = Router::Dumb::Dumber->new({
   root_dir    => 'templates/pages',
   extras_file => 'eg/extras',
 });
