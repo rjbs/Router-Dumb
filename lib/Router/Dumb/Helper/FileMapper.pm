@@ -1,6 +1,7 @@
 use 5.14.0;
 package Router::Dumb::Helper::FileMapper;
 use Moose;
+# ABSTRACT: something to build routes out of a dumb tree of files
 
 use File::Find::Rule;
 use Router::Dumb::Route;

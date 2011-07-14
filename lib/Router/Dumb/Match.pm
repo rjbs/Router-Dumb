@@ -1,5 +1,6 @@
 package Router::Dumb::Match;
 use Moose;
+# ABSTRACT: a dumb match against a dumb route
 
 use namespace::autoclean;
 

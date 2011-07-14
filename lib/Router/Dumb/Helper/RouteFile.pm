@@ -1,6 +1,7 @@
 use 5.14.0;
 package Router::Dumb::Helper::RouteFile;
 use Moose;
+# ABSTRACT: something to read routes out of a dumb text file
 
 use Router::Dumb::Route;
 

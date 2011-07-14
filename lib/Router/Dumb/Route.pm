@@ -1,6 +1,7 @@
 use 5.14.0;
 package Router::Dumb::Route;
 use Moose;
+# ABSTRACT: just one dumb route for use in a big dumb router
 
 use Router::Dumb::Match;
 

@@ -1,6 +1,7 @@
 use 5.14.0;
 package Router::Dumb;
 use Moose;
+# ABSTRACT: yet another dumb path router for URLs
 
 use Router::Dumb::Route;
 
