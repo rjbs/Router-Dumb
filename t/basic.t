@@ -5,17 +5,23 @@ use Test::Deep qw(cmp_deeply listmethods);
 
 use Moose::Util::TypeConstraints qw(find_type_constraint);
 use Path::Class;
-use Router::Dumb::Dumber;
+use Router::Dumb;
+use Router::Dumb::Helper::FileMapper;
+use Router::Dumb::Helper::RouteFile;
 
-my $r = Router::Dumb::Dumber->new({
-  simple_root   => 'templates/pages',
-  simple_munger => sub {
+my $r = Router::Dumb->new;
+
+Router::Dumb::Helper::FileMapper->new({
+  root => 'templates/pages',
+  target_munger => sub {
     my ($self, $filename) = @_;
-    dir('pages')->file( file($filename)->relative($self->simple_root) )
+    dir('pages')->file( file($filename)->relative($self->root) )
                 ->stringify;
   },
-  extras_file   => 'eg/extras',
-});
+})->add_routes_to($r);
+
+Router::Dumb::Helper::RouteFile->new({ filename => 'eg/extras' })
+                               ->add_routes_to($r);
 
 # Canonicalize hash.  This is stupid.  I need it because Test::Deep doesn't yet
 # have a way to do pairwise comparison. -- rjbs, 2011-07-13
