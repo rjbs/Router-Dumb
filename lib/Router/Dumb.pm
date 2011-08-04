@@ -59,21 +59,27 @@ sub route {
   }
 
   my @parts = split m{/}, $str;
-  my @candidates = grep {
-       ($_->part_count == @parts and $_->has_params)
-    or ($_->part_count <= @parts and $_->is_slurpy)
-  } $self->routes;
 
-  for my $candidate (
-    sort { $b->part_count <=> $a->part_count
-        || $a->is_slurpy  <=> $b->is_slurpy
-    } @candidates
-  ) {
+  for my $candidate ($self->ordered_routes(
+    sub {
+         ($_->part_count == @parts and $_->has_params)
+      or ($_->part_count <= @parts and $_->is_slurpy)
+    }
+  )) {
     next unless my $match = $candidate->check($str);
     return $match;
   }
 
   return;
+}
+
+sub ordered_routes {
+  my ($self, $filter) = @_;
+
+  return sort { $b->part_count <=> $a->part_count
+             || $a->is_slurpy  <=> $b->is_slurpy }
+         grep { $filter ? $filter->() : 1 }
+         $self->routes;
 }
 
 1;
