@@ -22,6 +22,13 @@ has target_munger => (
   default => sub {  sub { $_[1] }  },
 );
 
+has parts_munger => (
+  reader  => '_parts_munger',
+  isa     => 'CodeRef',
+  default => sub {  sub { $_[1] }  },
+);
+
+
 sub add_routes_to {
   my ($self, $router) = @_;
 
@@ -41,7 +48,7 @@ sub add_routes_to {
     confess "can't use asterisk in file names" if grep {; $_ eq '*' } @parts;
 
     my $route = Router::Dumb::Route->new({
-      parts  => \@parts,
+      parts  => $self->_parts_munger->( $self, \@parts ),
       target => $self->_target_munger->( $self, $file ),
     });
 
