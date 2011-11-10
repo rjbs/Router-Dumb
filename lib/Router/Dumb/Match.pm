@@ -4,6 +4,15 @@ use Moose;
 
 use namespace::autoclean;
 
+=head1 OVERVIEW
+
+Match objects are dead simple.  They have a C<target> method that returns the
+target of the match (from the Route taken), a C<matches> method that returns a
+list of pairs of the placeholders matched, and a C<route> method that returns
+the L<route object|Router::Dumb::Route> that led to the match.
+
+=cut
+
 has route => (
   is  => 'ro',
   isa => 'Router::Dumb::Route',

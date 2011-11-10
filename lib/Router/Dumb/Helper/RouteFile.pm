@@ -3,6 +3,27 @@ package Router::Dumb::Helper::RouteFile;
 use Moose;
 # ABSTRACT: something to read routes out of a dumb text file
 
+=head1 OVERVIEW
+
+  my $r = Router::Dumb->new;
+  
+  Router::Dumb::Helper::RouteFile->new({ filename => 'routes.txt' })
+                                 ->add_routes_to( $r );
+
+...and F<routes.txt> looks like...
+
+  # These are some great routes!
+
+  /citizen/:num/dob  =>  /citizen/dob
+    num isa Int
+
+  /blog/*            =>  /blog
+
+Then routes are added, doing just what you'd expect.  This helper is pretty
+dumb, but the whole Router::Dumb system is, too.
+
+=cut
+
 use Router::Dumb::Route;
 
 use Moose::Util::TypeConstraints qw(find_type_constraint);

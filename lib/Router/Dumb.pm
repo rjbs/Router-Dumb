@@ -3,22 +3,62 @@ package Router::Dumb;
 use Moose;
 # ABSTRACT: yet another dumb path router for URLs
 
+=head1 SYNOPSIS
+
+  my $r = Router::Dumb->new;
+
+  $r->add_route(
+    Router::Dumb::Route->new({
+      parts       => [ qw(group :group uid :uid) ],
+      target      => 'pants',
+      constraints => {
+        group => find_type_constraint('Int'),
+      },
+    }),
+  );
+
+  my $match = $r->route( '/group/123/uid/321' );
+  
+  # $match->target  returns 'pants'
+  # $match->matches returns (group => 123, uid => 321)
+
+=head1 DESCRIPTION
+
+Router::Dumb provides a pretty dumb router.  You can add routes and then ask
+how to route a given path string.
+
+Routes have a path.  A path is an arrayref of names.  Names that start with a
+colon are placeholders.  Everything else is a literal.  Literals pieces must
+appear, literally, in the string being routed.  A placeholder can be satisfied
+by any value, as long as it satisfies the placeholder's constraint.  If there's
+no constraint, any value works.
+
+The special part C<*> can be used to mean "...then capture everything else into
+the placeholder named C<REST>."
+
+Most of the time, you won't be calling C<add_route>, but using some other
+helper to figure out routes to add for you.  Router::Dumb ships with
+L<Router::Dumb::Helper::FileMapper> and L<Router::Dumb::Helper::RouteFile>.
+
+=cut
+
 use Router::Dumb::Route;
 
 use namespace::autoclean;
 
-has _route_map => (
-  is   => 'ro',
-  isa  => 'HashRef',
-  init_arg => undef,
-  default  => sub {  {}  },
-  traits   => [ 'Hash' ],
-  handles  => {
-    routes   => 'values',
-    route_at => 'get',
-    _add_route => 'set',
-  },
-);
+=method add_route
+
+  $router->add_route({
+    parts  => [ qw( the :path parts ) ],
+    target => 'target-string',
+    constraints => {
+      path => $moose_tc,
+    },
+  });
+
+This method adds a new L<route|Router::Dumb::Route> to the router.
+
+=cut
 
 sub add_route {
   my ($self, $route) = @_;
@@ -26,7 +66,7 @@ sub add_route {
   confess "invalid route" unless $route->isa('Router::Dumb::Route');
 
   my $npath = $route->normalized_path;
-  if (my $existing = $self->route_at( $npath )) {
+  if (my $existing = $self->_route_at( $npath )) {
     confess sprintf(
       "route conflict: %s would conflict with %s",
       $route->path,
@@ -36,6 +76,17 @@ sub add_route {
 
   $self->_add_route($npath, $route);
 }
+
+=method route
+
+  my $match_or_undef = $router->route( $str );
+
+If the given string can be routed to a match, the L<match|Router::Dumb::Match>
+is returned.  If not, the method returns false.
+
+The string must begin with a C</>.
+
+=cut
 
 sub route {
   my ($self, $str) = @_;
@@ -50,7 +101,7 @@ sub route {
 
   confess "path didn't start with /" unless $str =~ s{^/}{};
 
-  if (my $route = $self->route_at($str)) {
+  if (my $route = $self->_route_at($str)) {
     # should always match! -- rjbs, 2011-07-13
     confess "empty route didn't match empty path"
       unless my $match = $route->check($str);
@@ -73,13 +124,36 @@ sub route {
   return;
 }
 
+has _route_map => (
+  is   => 'ro',
+  isa  => 'HashRef',
+  init_arg => undef,
+  default  => sub {  {}  },
+  traits   => [ 'Hash' ],
+  handles  => {
+    _routes   => 'values',
+    _route_at => 'get',
+    _add_route => 'set',
+  },
+);
+
+=method ordered_routes
+
+  my @routes = $router->ordered_routes;
+
+This method returns the router's routes, in the order that they will be
+checked.  You probably do not want to use this method unless you really know
+what you're doing.
+
+=cut
+
 sub ordered_routes {
   my ($self, $filter) = @_;
 
   return sort { $b->part_count <=> $a->part_count
              || $a->is_slurpy  <=> $b->is_slurpy }
          grep { $filter ? $filter->() : 1 }
-         $self->routes;
+         $self->_routes;
 }
 
 1;
