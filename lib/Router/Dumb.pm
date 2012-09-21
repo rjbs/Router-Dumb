@@ -77,6 +77,30 @@ sub add_route {
   $self->_add_route($npath, $route);
 }
 
+=method add_route_unless_exists
+
+  $router->add_route_unless_exists({
+    parts  => [ qw( the :path parts ) ],
+    target => 'target-string',
+    ...
+  });
+
+This method adds a new L<route|Router::Dumb::Route> to the router unless it
+would conflict, in which case it does nothing.
+
+=cut
+
+sub add_route_unless_exists {
+  my ($self, $route) = @_;
+
+  confess "invalid route" unless $route->isa('Router::Dumb::Route');
+
+  my $npath = $route->normalized_path;
+  return if $self->_route_at( $npath );
+
+  $self->_add_route($npath, $route);
+}
+
 =method route
 
   my $match_or_undef = $router->route( $str );
