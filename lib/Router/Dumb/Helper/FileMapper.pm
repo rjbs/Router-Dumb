@@ -99,18 +99,28 @@ has parts_munger => (
 
 =method add_routes_to
 
-  $helper->add_routes_to( $router );
+  $helper->add_routes_to( $router, \%arg );
 
 This message tells the helper to scan its directory root and add routes to the
 given router.  The helper can be used over and over.
 
+Valid arguments are:
+
+  ignore_conflicts - if true, trying adding an existing route will be ignored,
+                     rather than fail
+
 =cut
 
 sub add_routes_to {
-  my ($self, $router) = @_;
+  my ($self, $router, $arg) = @_;
+  $arg ||= {};
 
   my $dir = $self->root;
   my @files = File::Find::Rule->file->in($dir);
+
+  my $add_method = $arg->{ignore_conflicts}
+                 ? 'add_route_unless_exists'
+                 : 'add_route';
 
   for my $file (@files) {
     my $path = $file =~ s{/INDEX$}{/}gr;
@@ -129,7 +139,7 @@ sub add_routes_to {
       target => $self->_target_munger->( $self, $file ),
     });
 
-    $router->add_route($route);
+    $router->$add_method($route);
   }
 }
 

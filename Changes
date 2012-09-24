@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+          let the helpers use add_route_unless_exists if requested
 
 0.002     2012-09-21 13:40:54 America/New_York
           add_route_unless_exists
