@@ -48,13 +48,15 @@ use namespace::autoclean;
 
 =method add_route
 
-  $router->add_route({
-    parts  => [ qw( the :path parts ) ],
-    target => 'target-string',
-    constraints => {
-      path => $moose_tc,
-    },
-  });
+  $router->add_route(
+    Router::Dumb::Route->new({
+      parts  => [ qw( the :path parts ) ],
+      target => 'target-string',
+      constraints => {
+        path => $moose_tc,
+      },
+    })
+  );
 
 This method adds a new L<route|Router::Dumb::Route> to the router.
 
@@ -79,11 +81,13 @@ sub add_route {
 
 =method add_route_unless_exists
 
-  $router->add_route_unless_exists({
-    parts  => [ qw( the :path parts ) ],
-    target => 'target-string',
-    ...
-  });
+  $router->add_route_unless_exists(
+    Router::Dumb::Route->new({
+      parts  => [ qw( the :path parts ) ],
+      target => 'target-string',
+      ...
+    })
+  );
 
 This method adds a new L<route|Router::Dumb::Route> to the router unless it
 would conflict, in which case it does nothing.
