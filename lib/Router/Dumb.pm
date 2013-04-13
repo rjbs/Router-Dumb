@@ -63,20 +63,23 @@ This method adds a new L<route|Router::Dumb::Route> to the router.
 =cut
 
 sub add_route {
-  my ($self, $route) = @_;
+  my ($self, @routes) = @_;
 
-  confess "invalid route" unless $route->isa('Router::Dumb::Route');
+  confess "invalid route" if grep { !$_->isa('Router::Dumb::Route') } @routes;
 
-  my $npath = $route->normalized_path;
-  if (my $existing = $self->_route_at( $npath )) {
-    confess sprintf(
-      "route conflict: %s would conflict with %s",
-      $route->path,
-      $existing->path,
-    );
+  foreach my $route (@routes)
+  {
+    my $npath = $route->normalized_path;
+    if (my $existing = $self->_route_at( $npath )) {
+      confess sprintf(
+        "route conflict: %s would conflict with %s",
+        $route->path,
+        $existing->path,
+      );
+    }
+
+    $self->_add_route($npath, $route);
   }
-
-  $self->_add_route($npath, $route);
 }
 
 =method add_route_unless_exists
@@ -95,14 +98,17 @@ would conflict, in which case it does nothing.
 =cut
 
 sub add_route_unless_exists {
-  my ($self, $route) = @_;
+  my ($self, @routes) = @_;
 
-  confess "invalid route" unless $route->isa('Router::Dumb::Route');
+  confess "invalid route" if grep { !$_->isa('Router::Dumb::Route') } @routes;
 
-  my $npath = $route->normalized_path;
-  return if $self->_route_at( $npath );
+  foreach my $route (@routes)
+  {
+    my $npath = $route->normalized_path;
+    return if $self->_route_at( $npath );
 
-  $self->_add_route($npath, $route);
+    $self->_add_route($npath, $route);
+  }
 }
 
 =method route
