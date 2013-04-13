@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+          doc fixes - thanks, Karen Etheridge!
 
 0.003     2012-09-24 08:40:39 America/New_York
           let the helpers use add_route_unless_exists if requested
