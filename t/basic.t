@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 use Test::More;
-use Test::Deep qw(cmp_deeply listmethods);
+use Test::Deep qw(all cmp_deeply methods subhashof superhashof);
 
 use Moose::Util::TypeConstraints qw(find_type_constraint);
 use Path::Class;
@@ -27,7 +27,7 @@ Router::Dumb::Helper::RouteFile->new({ filename => 'eg/extras' })
 # have a way to do pairwise comparison. -- rjbs, 2011-07-13
 sub _CH {
   my %hash = @_;
-  [ map { $_ => $hash{$_} } sort keys %hash ]
+  return all( superhashof(\%hash), subhashof(\%hash) );
 }
 
 $r->add_route(
@@ -42,37 +42,37 @@ $r->add_route(
 
 my @tests = (
   '/' => {
-    target  => [ 'pages/INDEX' ],
-    matches => _CH(),
+    target  => 'pages/INDEX',
+    _matches_href => _CH(),
   },
 
   '/images' => {
-    target  => [ 'pages/images/INDEX' ],
-    matches => _CH(),
+    target  => 'pages/images/INDEX',
+    _matches_href => _CH(),
   },
 
   '/legal' => undef,
 
   '/legal/privacy' => {
-    target  => [ 'pages/legal/privacy' ],
-    matches => _CH(),
+    target  => 'pages/legal/privacy',
+    _matches_href => _CH(),
   },
 
   '/citizen/1234/dob' => {
-    target  => [ 'citizen/dob' ],
-    matches => _CH(num => 1234),
+    target  => 'citizen/dob',
+    _matches_href => _CH(num => 1234),
   },
 
   '/citizen/xyzzy/dob' => undef,
 
   '/blog/1231/2;34/your-mom' => {
-    target  => [ 'blog' ],
-    matches => _CH(REST => '1231/2;34/your-mom'),
+    target  => 'blog',
+    _matches_href => _CH(REST => '1231/2;34/your-mom'),
   },
 
   '/group/123/uid/321' => {
-    target  => [ 'pants' ],
-    matches => _CH(group => 123, uid => 321),
+    target  => 'pants',
+    _matches_href => _CH(group => 123, uid => 321),
   },
 
   '/group/abc/uid/321' => undef,
@@ -82,7 +82,7 @@ for (my $i = 0; $i < @tests; $i += 2) {
   my $path = $tests[ $i ];
   my $test = $tests[ $i + 1 ];
 
-  my $want = $test ? listmethods(%$test) : undef;
+  my $want = $test ? methods(%$test) : undef;
 
   cmp_deeply(
     scalar $r->route($path),

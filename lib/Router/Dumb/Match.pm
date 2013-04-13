@@ -26,6 +26,7 @@ has matches => (
   traits   => [ 'Hash' ],
   handles  => {
     matches => 'elements',
+    _matches_href => 'shallow_clone',
   },
 );
 
