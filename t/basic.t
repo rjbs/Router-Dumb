@@ -16,6 +16,7 @@ Router::Dumb::Helper::FileMapper->new({
   target_munger => sub {
     my ($self, $filename) = @_;
     dir('pages')->file( file($filename)->relative($self->root) )
+                ->as_foreign('Unix')
                 ->stringify;
   },
 })->add_routes_to($r);
