@@ -1,7 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
-          tests rewritten to use Test::Deep::UnorderedPairs (Karen Etheridge)
+        - update packaging and metadata
+        - tests rewritten to use Test::Deep::UnorderedPairs (Karen Etheridge)
 
 0.005     2013-07-28 21:53:59 America/New_York
           only test fixes: should now pass on Win32
